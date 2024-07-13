@@ -1,18 +1,16 @@
-use aes_gcm::aead::generic_array::GenericArray;
-use aes_gcm::aead::Aead;
-use aes_gcm::aes::Aes256Dec;
-use aes_gcm::{Aes256Gcm, AesGcm, KeyInit};
+use aes_gcm::{
+    aead::{generic_array::GenericArray, Aead},
+    Aes256Gcm, KeyInit,
+};
 use chrono::{DateTime, Duration, Utc};
-use nix::ifaddrs;
-use nix::sys::reboot;
-use openssl::pkey::{PKey, Public};
-use openssl::rsa::{Padding, Rsa};
-use openssl::sign::Verifier;
-use russh_keys::key::PublicKey;
-use russh_keys::parse_public_key_base64;
-use std::collections::HashMap;
-use std::io::BufReader;
-use std::net::IpAddr;
+use nix::{ifaddrs, sys::reboot};
+use openssl::{
+    pkey::{PKey, Public},
+    rsa::{Padding, Rsa},
+    sign::Verifier,
+};
+use russh_keys::{key::PublicKey, parse_public_key_base64};
+use std::{collections::HashMap, io::BufReader, net::IpAddr};
 
 fn read_authorized_keys() -> Vec<PKey<Public>> {
     let file = std::fs::File::open("/home/stevev/.ssh/authorized_keys").unwrap();
@@ -39,7 +37,7 @@ fn read_authorized_keys() -> Vec<PKey<Public>> {
 fn verify_signature(message: &[u8], signature: &[u8], keys: &[PKey<Public>]) -> bool {
     println!("Keys: {:?}", keys);
     for pub_key in keys {
-        let mut verifier = Verifier::new(openssl::hash::MessageDigest::sha256(), &pub_key).unwrap();
+        let mut verifier = Verifier::new(openssl::hash::MessageDigest::sha256(), pub_key).unwrap();
         verifier.update(message).unwrap();
         if verifier.verify(signature).unwrap() {
             return true;
@@ -137,11 +135,11 @@ async fn main() -> std::io::Result<()> {
                         let nonce = &decrypted_nonce_and_key[0..12];
                         let key = &decrypted_nonce_and_key[12..44];
 
-                        let cipher = Aes256Gcm::new(&GenericArray::from_slice(key));
+                        let cipher = Aes256Gcm::new(GenericArray::from_slice(key));
                         let nonce = GenericArray::from_slice(nonce);
 
                         let received_data = cipher
-                            .decrypt(&nonce, &received_data[0..received_data.len() - 384])
+                            .decrypt(nonce, &received_data[0..received_data.len() - 384])
                             .unwrap();
 
                         let mac_part = &received_data[0..6];
