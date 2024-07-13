@@ -13,7 +13,11 @@ use russh_keys::{key::PublicKey, parse_public_key_base64};
 use std::{collections::HashMap, io::BufReader, net::IpAddr};
 
 fn read_authorized_keys() -> Vec<PKey<Public>> {
-    let file = std::fs::File::open("/home/stevev/.ssh/authorized_keys").unwrap();
+    let file = std::fs::File::open(format!(
+        "{}/.ssh/authorized_keys",
+        std::env::var("HOME").unwrap()
+    ))
+    .unwrap();
     let authorized_keys = std::io::read_to_string(BufReader::new(file)).unwrap();
 
     let mut pub_keys = Vec::new();
