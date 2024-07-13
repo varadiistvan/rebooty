@@ -122,6 +122,9 @@ async fn main() -> std::io::Result<()> {
 
             let received_data = &buf[..amt];
 
+            if received_data.len() < 384 {
+                continue;
+            }
             for key in &keys {
                 let mut decrypted_nonce_and_key = vec![0; key.size()];
 
